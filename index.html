@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Sumário do acervo — zonaeducacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE1; --paper2:#ECE4D2;
+    --ink:#1D1710; --ink70:rgba(29,23,16,.72); --ink50:rgba(29,23,16,.5);
+    --ink30:rgba(29,23,16,.3); --hair:rgba(29,23,16,.16); --dot:rgba(29,23,16,.42);
+    --acc:#C24418;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{color-scheme:light;scroll-behavior:smooth}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:Fraunces,serif; font-optical-sizing:auto;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  /* textura de papel impresso */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:50; pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  ::selection{background:var(--acc);color:var(--paper)}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  .hidden{display:none!important}
+  a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{
+    outline:2px solid var(--acc); outline-offset:3px;
+  }
+  .ic{flex:none}
+
+  .page{max-width:940px;margin:0 auto;padding:26px clamp(20px,5vw,48px) 64px}
+
+  /* ---------- entradas em cena ---------- */
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .is-loading .masthead,.is-loading .controls,.is-loading .toc,.is-loading .colophon,
+  .is-error   .masthead,.is-error   .controls,.is-error   .toc,.is-error   .colophon{display:none}
+  .is-ready > *{animation:rise .65s cubic-bezier(.22,.7,.3,1) backwards}
+  .is-ready > *:nth-child(1){animation-delay:.02s}
+  .is-ready > *:nth-child(2){animation-delay:.09s}
+  .is-ready > *:nth-child(3){animation-delay:.16s}
+  .is-ready > *:nth-child(4){animation-delay:.23s}
+
+  /* ---------- masthead ---------- */
+  .mast-top{
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px 20px;
+    padding:10px 0 12px;border-bottom:2.5px solid var(--ink);
+    font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink50);
+  }
+  .mast-top b{font-weight:600;color:var(--ink)}
+
+  .identity{display:flex;gap:30px;align-items:flex-start;padding:38px 0 32px;flex-wrap:wrap}
+  .portrait{position:relative;flex:none;width:clamp(92px,13vw,128px)}
+  .portrait img{
+    display:block;width:100%;aspect-ratio:1;object-fit:cover;
+    filter:grayscale(1) contrast(1.05);border:2px solid var(--ink);
+    box-shadow:6px 6px 0 var(--paper2), 6px 6px 0 1.5px var(--ink);
+    transition:transform .25s cubic-bezier(.22,.7,.3,1),box-shadow .25s;
+  }
+  .portrait:hover img{transform:translate(-3px,-3px);box-shadow:9px 9px 0 var(--paper2),9px 9px 0 1.5px var(--acc)}
+  .stamp{
+    position:absolute;right:-24px;bottom:-24px;width:84px;height:84px;
+    animation:spin 26s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .who{flex:1;min-width:260px}
+  .who h1{
+    font-weight:620;font-size:clamp(40px,7.2vw,82px);line-height:.98;letter-spacing:-.02em;
+    text-wrap:balance;
+  }
+  .who h1::after{content:".";color:var(--acc)}
+  .tagline{font-style:italic;font-weight:420;font-size:clamp(16px,2.4vw,21px);color:var(--ink70);margin-top:12px;text-wrap:balance}
+  .tagline em{color:var(--acc)}
+  .bio{font-size:15px;line-height:1.55;color:var(--ink50);max-width:54ch;margin-top:10px}
+  .links{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:16px;font:500 12px 'IBM Plex Mono',monospace}
+  .links a{color:var(--ink);text-decoration:none;border-bottom:1.5px solid var(--ink);padding-bottom:2px;display:inline-flex;align-items:center;gap:6px;transition:color .18s,border-color .18s}
+  .links a:hover{color:var(--acc);border-color:var(--acc)}
+  .links .ic{color:currentColor}
+
+  /* ---------- ficha de números ---------- */
+  .ledger{display:grid;grid-template-columns:repeat(4,1fr);border-block:1px solid var(--hair)}
+  .stat{padding:22px 22px 20px 0;display:flex;flex-direction:column;gap:8px}
+  .stat + .stat{border-left:1px solid var(--hair);padding-left:22px}
+  .stat b{font-weight:600;font-size:clamp(30px,4.6vw,46px);line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .stat span{font:500 9.5px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink50)}
+
+  /* ---------- composição linguística ---------- */
+  .langband{padding:26px 0 24px;border-bottom:1px solid var(--hair)}
+  .sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .sec-head h2{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--ink50)}
+  .sec-head small{font:italic 400 11.5px 'IBM Plex Mono',monospace;color:var(--ink30)}
+  .band{display:flex;gap:2px;height:16px;margin-top:16px}
+  .seg-lang{
+    position:relative;border:none;cursor:pointer;min-width:5px;padding:0;
+    transition:outline-color .15s;
+  }
+  .seg-lang:hover,.seg-lang:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .seg-lang.on{outline:2px solid var(--acc);outline-offset:2px}
+  .seg-lang.striped{background:repeating-linear-gradient(45deg,#B7AC98 0 4px,#CFC6B4 4px 8px)}
+  .seg-lang::after{
+    content:attr(data-tip);position:absolute;bottom:calc(100% + 12px);left:50%;
+    transform:translateX(-50%) translateY(3px);opacity:0;pointer-events:none;
+    background:var(--ink);color:var(--paper);font:500 10px 'IBM Plex Mono',monospace;
+    letter-spacing:.05em;padding:6px 9px;white-space:nowrap;transition:.16s;z-index:4;
+  }
+  .seg-lang:hover::after,.seg-lang:focus-visible::after{opacity:1;transform:translateX(-50%)}
+  .band-legend{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:14px}
+  .band-legend .lg,.band-legend .more{
+    display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;
+    font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--ink50);padding:2px 0;border-bottom:2px solid transparent;transition:.15s;
+  }
+  .band-legend .lg:hover{color:var(--ink)}
+  .band-legend .lg.on{color:var(--ink);border-color:var(--acc)}
+  .band-legend .more{cursor:default}
+  .band-legend i{width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(29,23,16,.2)}
+
+  /* ---------- controles ---------- */
+  .controls{display:flex;align-items:flex-end;gap:16px 26px;flex-wrap:wrap;padding:20px 0;border-bottom:1px solid var(--hair)}
+  .search{display:flex;align-items:center;gap:10px;flex:1;min-width:230px;border-bottom:2px solid var(--ink);padding:7px 2px;transition:border-color .18s}
+  .search:focus-within{border-color:var(--acc)}
+  .search svg{color:var(--ink50)}
+  .search input{flex:1;border:none;background:none;outline:none;font:400 13.5px 'IBM Plex Mono',monospace;color:var(--ink)}
+  .search input::placeholder{color:var(--ink30)}
+  .search kbd{font:500 9.5px 'IBM Plex Mono',monospace;color:var(--ink30);border:1px solid var(--hair);border-radius:3px;padding:2px 6px}
+  .seg{display:flex;border:1.5px solid var(--ink)}
+  .seg button{
+    font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;
+    padding:9px 15px;background:transparent;border:none;cursor:pointer;color:var(--ink);
+    border-right:1.5px solid var(--ink);transition:background .15s,color .15s;
+  }
+  .seg button:last-child{border-right:none}
+  .seg button.on{background:var(--ink);color:var(--paper)}
+  .seg button:not(.on):hover{background:rgba(29,23,16,.08)}
+  .sort{display:flex;align-items:center;gap:10px;font:500 9.5px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink50)}
+  .sort select{
+    appearance:none;-webkit-appearance:none;border:none;border-bottom:1.5px solid var(--ink);
+    background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%231D1710' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right center;
+    font:500 12px 'IBM Plex Mono',monospace;color:var(--ink);padding:5px 20px 5px 0;cursor:pointer;
+  }
+
+  /* ---------- sumário ---------- */
+  .toc{padding-top:28px}
+  .toc-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;
+    padding-bottom:12px;border-bottom:2px solid var(--ink);
+    font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;
+  }
+  .toc-head .legend{display:inline-flex;align-items:center;gap:7px;font-weight:500;color:var(--ink50);letter-spacing:.1em}
+  .toc-head .legend svg{color:var(--acc)}
+  .toc-head .clear{
+    background:none;border:none;cursor:pointer;font:600 10px 'IBM Plex Mono',monospace;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--acc);border-bottom:1.5px solid var(--acc);padding:0 0 2px;
+  }
+  #list{list-style:none}
+  .entry{border-bottom:1px solid var(--hair);animation:rise .5s calc(var(--i)*.022s) backwards}
+  .entry a{display:flex;gap:18px;padding:20px 10px;color:inherit;text-decoration:none;transition:background .18s}
+  .entry a:hover{background:var(--paper2)}
+  .entry .num{font:500 12px/1.5 'IBM Plex Mono',monospace;color:var(--ink30);min-width:26px;padding-top:7px;transition:color .18s}
+  .entry a:hover .num{color:var(--acc)}
+  .row1{display:flex;align-items:flex-end}
+  .title{font-weight:620;font-size:clamp(19px,3vw,25px);line-height:1.12;letter-spacing:-.012em;overflow-wrap:anywhere}
+  .dots{
+    flex:1;min-width:26px;height:7px;margin:0 14px 6px;
+    background-image:radial-gradient(circle at 1.5px 3.5px,var(--dot) 1.4px,transparent 1.7px);
+    background-size:9px 7px;background-repeat:repeat-x;background-position:0 100%;
+  }
+  .entry a:hover .dots{animation:crawl .45s linear infinite}
+  @keyframes crawl{to{background-position:9px 100%}}
+  .stars{display:inline-flex;align-items:center;gap:5px;font:500 12.5px 'IBM Plex Mono',monospace;color:var(--ink70);white-space:nowrap;padding-bottom:4px;font-variant-numeric:tabular-nums}
+  .stars .ic{color:var(--acc)}
+  .desc{display:block;font-size:15px;line-height:1.55;color:var(--ink70);max-width:62ch;margin-top:7px}
+  .desc .none{color:var(--ink30)}
+  .meta{
+    display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-top:10px;
+    font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;text-transform:uppercase;color:var(--ink50);
+  }
+  .lang{display:inline-flex;align-items:center;gap:6px;color:var(--ink70)}
+  .lang i{width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(29,23,16,.22)}
+  .fk{display:inline-flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
+  .sep{color:var(--ink30)}
+  .badge{border:1px solid var(--ink30);color:var(--ink50);padding:2px 6px;font-size:8.5px;letter-spacing:.16em}
+  .badge.arch{border-style:dashed}
+  .go{margin-left:auto;display:inline-flex;color:var(--acc);opacity:0;transform:translate(-5px,5px);transition:.2s}
+  .entry a:hover .go{opacity:1;transform:none}
+  .entry a:focus-visible{outline:2px solid var(--acc);outline-offset:-2px;background:var(--paper2)}
+
+  .empty{padding:48px 10px;text-align:left}
+  .empty p{font-style:italic;font-size:17px;color:var(--ink50)}
+  .empty button{
+    margin-top:18px;background:none;border:1.5px solid var(--ink);cursor:pointer;color:var(--ink);
+    font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;padding:11px 18px;transition:.18s;
+  }
+  .empty button:hover{background:var(--ink);color:var(--paper)}
+
+  /* ---------- colofão ---------- */
+  .colophon{
+    margin-top:44px;border-top:1px solid var(--hair);padding-top:16px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px 24px;
+    font:500 9.5px 'IBM Plex Mono',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink50);
+  }
+
+  /* ---------- estado: carregando / erro ---------- */
+  .state{padding:70px 0 30px}
+  .term{display:flex;flex-direction:column;gap:7px;margin-bottom:36px;font:400 12.5px 'IBM Plex Mono',monospace;color:var(--ink50)}
+  .term .cmd{color:var(--ink);font-weight:500}
+  .blink{animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .skel{display:flex;gap:18px;padding:20px 10px;border-bottom:1px solid var(--hair);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.5}}
+  .skel .num{font:500 12px/1.5 'IBM Plex Mono',monospace;color:var(--ink30);min-width:26px}
+  .sk-body{flex:1}
+  .sk-row{display:flex;align-items:center}
+  .sk-title{height:21px;width:32%;background:var(--ink);opacity:.13;border-radius:2px}
+  .sk-dots{flex:1;height:7px;margin:7px 14px 0;background-image:radial-gradient(circle at 1.5px 3.5px,var(--dot) 1.4px,transparent 1.7px);background-size:9px 7px;background-repeat:repeat-x;opacity:.45}
+  .sk-star{width:52px;height:13px;background:var(--ink);opacity:.13;border-radius:2px}
+  .sk-desc{display:block;height:11px;width:56%;background:var(--ink);opacity:.07;border-radius:2px;margin:15px 0 0 44px}
+  .sk-meta{display:block;height:9px;width:38%;background:var(--ink);opacity:.07;border-radius:2px;margin:11px 0 0 44px}
+  .error{max-width:580px}
+  .err-code{display:inline-block;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.22em;color:var(--paper);background:var(--acc);padding:7px 13px;transform:rotate(-2deg)}
+  .error h2{font-weight:600;font-size:clamp(26px,4vw,34px);line-height:1.15;margin:20px 0 12px;letter-spacing:-.015em}
+  .error p{font-size:15.5px;line-height:1.65;color:var(--ink70);margin-bottom:24px}
+  .error button{
+    background:none;border:1.5px solid var(--ink);cursor:pointer;color:var(--ink);
+    font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;padding:13px 22px;transition:.18s;
+  }
+  .error button:hover{background:var(--ink);color:var(--paper)}
+
+  /* ---------- responsivo ---------- */
+  @media (max-width:720px){
+    .ledger{grid-template-columns:1fr 1fr}
+    .stat{padding:16px 14px 14px 0}
+    .stat + .stat{padding-left:16px}
+    .stat:nth-child(odd){border-left:none;padding-left:0}
+    .stat:nth-child(even){border-left:1px solid var(--hair)}
+    .stat:nth-child(n+3){border-top:1px solid var(--hair)}
+    .entry a{gap:12px}
+    .dots{min-width:16px;margin:0 9px 6px}
+    .go{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="page is-loading" id="page">
+
+  <header class="masthead">
+    <div class="mast-top">
+      <span id="mLeft">FICHA DE CATÁLOGO — GH/ZONAEDUCACIONAL</span>
+      <span id="mRight"></span>
+    </div>
+
+    <div class="identity">
+      <div class="portrait">
+        <img id="avatar" alt="" referrerpolicy="no-referrer">
+        <svg class="stamp" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="50" fill="#F4EEE1"/>
+          <defs><path id="cpath" d="M50,50 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0"/></defs>
+          <text style="font:600 10px 'IBM Plex Mono',monospace;letter-spacing:2px" fill="#C24418">
+            <textPath href="#cpath" textLength="225">SUMÁRIO DO ACERVO · GITHUB ·</textPath>
+          </text>
+          <g stroke="#C24418" stroke-width="2.4" stroke-linecap="round">
+            <path d="M50 41v18M42.2 45.5l15.6 9M57.8 45.5l-15.6 9"/>
+          </g>
+        </svg>
+      </div>
+      <div class="who">
+        <h1 id="orgName">—</h1>
+        <p class="tagline">Índice completo do acervo público — <em>repositórios, forks &amp; estrelas</em>.</p>
+        <p class="bio hidden" id="bio"></p>
+        <div class="links" id="links"></div>
+      </div>
+    </div>
+
+    <div class="ledger" aria-label="Números do acervo">
+      <div class="stat"><b id="sRepos">0</b><span>repositórios</span></div>
+      <div class="stat"><b id="sStars">0</b><span>estrelas recebidas</span></div>
+      <div class="stat"><b id="sForks">0</b><span>forks acumulados</span></div>
+      <div class="stat"><b id="sLangs">0</b><span>linguagens</span></div>
+    </div>
+
+    <section class="langband" id="langSection" aria-label="Composição linguística do acervo">
+      <div class="sec-head">
+        <h2>Composição do acervo por linguagem</h2>
+        <small>clique em uma cor para filtrar o índice</small>
+      </div>
+      <div class="band" id="band"></div>
+      <div class="band-legend" id="bandLegend"></div>
+    </section>
+  </header>
+
+  <section class="controls" aria-label="Filtros do índice">
+    <div class="search">
+      <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5.2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="m11 11 3.4 3.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input id="q" type="search" placeholder="Buscar no índice por nome, tema ou linguagem…" aria-label="Buscar repositório">
+      <kbd>/</kbd>
+    </div>
+    <div class="seg" role="group" aria-label="Tipo de repositório">
+      <button data-k="all" class="on">Todos</button>
+      <button data-k="src">Originais</button>
+      <button data-k="fork">Forks</button>
+    </div>
+    <label class="sort">Ordenar
+      <select id="sort" aria-label="Ordenar índice">
+        <option value="pushed">Atualização recente</option>
+        <option value="stars">Mais estrelas</option>
+        <option value="forks">Mais forks</option>
+        <option value="name">Ordem alfabética</option>
+      </select>
+    </label>
+  </section>
+
+  <section class="toc" aria-label="Sumário de repositórios">
+    <div class="toc-head">
+      <span id="tocCount">ÍNDICE</span>
+      <button id="clearBtn" class="clear hidden">× limpar filtros</button>
+      <span class="legend">
+        <svg class="ic" width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg>
+        estrelas
+        <svg class="ic" width="12" height="12" viewBox="0 0 16 16" aria-hidden="true" style="color:var(--ink50)"><path fill="currentColor" d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3.5 6.25v-.878a2.25 2.25 0 1 1 1.5 0ZM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm-3 8.75a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z"/></svg>
+        forks
+      </span>
+    </div>
+    <ol id="list"></ol>
+    <div id="emptyBox" class="empty hidden">
+      <p id="emptyMsg"></p>
+      <button id="emptyClear">Limpar filtros</button>
+    </div>
+  </section>
+
+  <footer class="colophon">
+    <span>Compilado localmente · API pública do GitHub · sem autenticação<span id="capNote"></span></span>
+    <span id="lastPush"></span>
+  </footer>
+
+  <div class="state" id="state">
+    <div class="term">
+      <span class="cmd">$ compilando o sumário do acervo…<span class="blink">▌</span></span>
+      <span>→ GET api.github.com/users/zonaeducacional</span>
+    </div>
+    <div class="skel"><span class="num">01</span><div class="sk-body"><div class="sk-row"><span class="sk-title"></span><span class="sk-dots"></span><span class="sk-star"></span></div><span class="sk-desc"></span><span class="sk-meta"></span></div></div>
+    <div class="skel"><span class="num">02</span><div class="sk-body"><div class="sk-row"><span class="sk-title" style="width:46%"></span><span class="sk-dots"></span><span class="sk-star"></span></div><span class="sk-desc" style="width:48%"></span><span class="sk-meta" style="width:30%"></span></div></div>
+    <div class="skel"><span class="num">03</span><div class="sk-body"><div class="sk-row"><span class="sk-title" style="width:27%"></span><span class="sk-dots"></span><span class="sk-star"></span></div><span class="sk-desc" style="width:60%"></span><span class="sk-meta" style="width:42%"></span></div></div>
+    <div class="skel"><span class="num">04</span><div class="sk-body"><div class="sk-row"><span class="sk-title" style="width:38%"></span><span class="sk-dots"></span><span class="sk-star"></span></div><span class="sk-desc" style="width:44%"></span><span class="sk-meta" style="width:26%"></span></div></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const USER = 'zonaeducacional';
+  const $ = s => document.querySelector(s);
+
+  const LANG_COLORS = {
+    JavaScript:'#f1e05a', TypeScript:'#3178c6', Python:'#3572A5', HTML:'#e34c26', CSS:'#563d7c',
+    Java:'#b07219', 'C++':'#f34b7d', C:'#555555', 'C#':'#178600', PHP:'#4F5D95', Ruby:'#701516',
+    Go:'#00ADD8', Rust:'#dea584', Swift:'#F05138', Kotlin:'#A97BFF', Dart:'#00B4AB', Shell:'#89e051',
+    Vue:'#41b883', 'Jupyter Notebook':'#DA5B0B', SCSS:'#c6538c', Lua:'#000080', R:'#198CE7',
+    PowerShell:'#012456', Makefile:'#427819', Dockerfile:'#384d54', TeX:'#3D6117', CMake:'#DA3434',
+    Zig:'#ec915c', Elixir:'#6e4a7e', Haskell:'#5e5086', 'Objective-C':'#438eff', Perl:'#0298c3',
+    Assembly:'#6E4C13', GDScript:'#355570', Nix:'#7e7eff', 'Visual Basic .NET':'#945db7'
+  };
+
+  const I_STAR = '<svg class="ic" width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg>';
+  const I_FORK = '<svg class="ic" width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3.5 6.25v-.878a2.25 2.25 0 1 1 1.5 0ZM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm-3 8.75a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z"/></svg>';
+  const I_GO   = '<svg class="ic" width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 11.5 11.5 4.5M5.8 4.5h5.7v5.7" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const I_GH   = '<svg class="ic" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>';
+
+  const state = { repos:[], q:'', kind:'all', lang:null, sort:'pushed' };
+
+  /* ---------- utilidades ---------- */
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmtN = n => n.toLocaleString('pt-BR');
+  const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const fmtDate = iso => new Date(iso).toLocaleDateString('pt-BR', {day:'2-digit', month:'short', year:'numeric'});
+
+  function relTime(iso){
+    const days = (Date.now() - new Date(iso).getTime()) / 86400000;
+    if (days < 1/24) return 'agora mesmo';
+    if (days < 1)    return 'hoje';
+    if (days < 2)    return 'ontem';
+    if (days < 31){ const n = Math.floor(days);  return `há ${n} dia${n>1?'s':''}`; }
+    if (days < 365){ const n = Math.max(1, Math.round(days/30.44)); return `há ${n} ${n>1?'meses':'mês'}`; }
+    const n = Math.max(1, Math.round(days/365.25)); return `há ${n} ano${n>1?'s':''}`;
+  }
+
+  function countUp(el, target){
+    const t0 = performance.now(), dur = 950;
+    (function step(t){
+      const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmtN(Math.round(target * e));
+      if (p < 1) requestAnimationFrame(step); else el.textContent = fmtN(target);
+    })(t0);
+  }
+
+  /* ---------- acesso à API ---------- */
+  async function jget(url){
+    let res;
+    try { res = await fetch(url, { headers:{ 'Accept':'application/vnd.github+json' } }); }
+    catch { const e = new Error('network'); e.status = 0; throw e; }
+    if (!res.ok){ const e = new Error('HTTP ' + res.status); e.status = res.status; throw e; }
+    return res.json();
+  }
+  async function getProfile(){
+    try { return await jget(`https://api.github.com/users/${USER}`); }
+    catch(e){ if (e.status === 404) return await jget(`https://api.github.com/orgs/${USER}`); throw e; }
+  }
+  async function getRepos(){
+    const all = [];
+    for (let page = 1; page <= 5; page++){
+      const batch = await jget(`https://api.github.com/users/${USER}/repos?per_page=100&page=${page}&sort=pushed`);
+      all.push(...batch);
+      if (batch.length < 100) break;
+    }
+    return all;
+  }
+
+  /* ---------- render do perfil ---------- */
+  function buildProfile(p, repos){
+    const name = p.name || p.login;
+    document.title = `Sumário do acervo — ${name}`;
+    $('#orgName').textContent = name;
+    $('#avatar').src = p.avatar_url + (p.avatar_url.includes('?') ? '&' : '?') + 's=240';
+    $('#avatar').alt = 'Retrato de ' + name;
+
+    const bio = $('#bio');
+    if (p.bio){ bio.textContent = p.bio; bio.classList.remove('hidden'); }
+
+    const links = $('#links');
+    links.innerHTML = `<a href="${esc(p.html_url)}" target="_blank" rel="noopener">${I_GH}<span>@${esc(p.login)}</span></a>`
+      + (p.blog ? `<a href="${esc(/^https?:/.test(p.blog) ? p.blog : 'https://' + p.blog)}" target="_blank" rel="noopener">${esc(p.blog.replace(/^https?:\/\//,''))} ${I_GO}</a>` : '');
+
+    const isOrg = p.type === 'Organization';
+    const since = new Date(p.created_at).getFullYear();
+    $('#mLeft').innerHTML = `FICHA DE CATÁLOGO — GH/<b>${esc(p.login.toUpperCase())}</b> · ${isOrg?'ORGANIZAÇÃO':'USUÁRIO'} DESDE ${since}`;
+    $('#mRight').textContent = 'COMPILADO EM ' + new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'short', year:'numeric'}).toUpperCase();
+
+    const stars = repos.reduce((s,r) => s + r.stargazers_count, 0);
+    const forks = repos.reduce((s,r) => s + r.forks_count, 0);
+    const langs = new Set(repos.map(r => r.language).filter(Boolean));
+    countUp($('#sRepos'), repos.length);
+    countUp($('#sStars'), stars);
+    countUp($('#sForks'), forks);
+    countUp($('#sLangs'), langs.size);
+
+    if (repos.length){
+      const last = repos.reduce((a,r) => r.pushed_at > a ? r.pushed_at : a, repos[0].pushed_at);
+      $('#lastPush').textContent = 'ÚLTIMA ATIVIDADE NO ACERVO: ' + fmtDate(last).toUpperCase();
+    }
+    if (repos.length >= 500) $('#capNote').textContent = ' · EXIBINDO OS 500 MAIS RECENTES';
+  }
+
+  /* ---------- barra de linguagens ---------- */
+  function buildBand(repos){
+    const counts = {}; let none = 0;
+    repos.forEach(r => { if (r.language) counts[r.language] = (counts[r.language]||0)+1; else none++; });
+    const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    if (!entries.length && !none){ $('#langSection').classList.add('hidden'); return; }
+    const total = repos.length;
+    const band = $('#band'), legend = $('#bandLegend');
+    band.innerHTML = ''; legend.innerHTML = '';
+
+    const seg = (label, key, count, striped) => {
+      const b = document.createElement('button');
+      b.className = 'seg-lang' + (striped ? ' striped' : '');
+      b.dataset.lang = key;
+      b.style.width = (count/total*100).toFixed(2) + '%';
+      if (!striped) b.style.background = LANG_COLORS[label] || '#9A9081';
+      b.dataset.tip = `${label} — ${count} ${count===1?'repositório':'repositórios'} (${Math.round(count/total*100)}%)`;
+      b.setAttribute('aria-label', 'Filtrar índice por ' + label);
+      b.addEventListener('click', () => toggleLang(key));
+      band.appendChild(b);
+    };
+    const leg = (label, key, count, color) => {
+      const b = document.createElement('button');
+      b.className = 'lg'; b.dataset.lang = key;
+      b.innerHTML = `<i style="background:${color}"></i>${esc(label)} ${count}`;
+      b.addEventListener('click', () => toggleLang(key));
+      legend.appendChild(b);
+    };
+    entries.forEach(([l,c]) => { seg(l, l, c, false); });
+    if (none) seg('não informado', '__none__', none, true);
+    entries.slice(0,6).forEach(([l,c]) => leg(l, l, c, LANG_COLORS[l] || '#9A9081'));
+    if (entries.length > 6){
+      const rest = entries.slice(6).reduce((s,[,c]) => s+c, 0);
+      const m = document.createElement('span');
+      m.className = 'more'; m.textContent = `+${entries.length-6} outras · ${rest}`;
+      legend.appendChild(m);
+    }
+    updateBandSel();
+  }
+  function toggleLang(key){
+    state.lang = (state.lang === key) ? null : key;
+    updateBandSel(); render();
+  }
+  function updateBandSel(){
+    document.querySelectorAll('.seg-lang, .lg').forEach(el =>
+      el.classList.toggle('on', !!state.lang && el.dataset.lang === state.lang));
+  }
+
+  /* ---------- sumário ---------- */
+  const CMP = {
+    pushed:(a,b) => new Date(b.pushed_at) - new Date(a.pushed_at),
+    stars:(a,b) => b.stargazers_count - a.stargazers_count,
+    forks:(a,b) => b.forks_count - a.forks_count,
+    name:(a,b) => a.name.localeCompare(b.name, 'pt-BR')
+  };
+  const isFiltered = () => !!(state.q || state.kind !== 'all' || state.lang);
+
+  function entryHTML(r, i){
+    const lang = r.language;
+    const langColor = LANG_COLORS[lang] || '#9A9081';
+    return `<li class="entry" style="--i:${Math.min(i,26)}">
+      <a href="${esc(r.html_url)}" target="_blank" rel="noopener" title="Abrir ${esc(r.full_name)} no GitHub">
+        <span class="num" aria-hidden="true">${String(i+1).padStart(2,'0')}</span>
+        <span class="body" style="flex:1;min-width:0">
+          <span class="row1" style="display:flex">
+            <span class="title">${esc(r.name)}</span>
+            <span class="dots" aria-hidden="true"></span>
+            <span class="stars">${I_STAR}${fmtN(r.stargazers_count)}</span>
+          </span>
+          <span class="desc">${r.description ? esc(r.description) : '<em class="none">sem descrição registrada</em>'}</span>
+          <span class="meta">
+            ${lang ? `<span class="lang"><i style="background:${langColor}"></i>${esc(lang)}</span><span class="sep">·</span>` : ''}
+            <span class="fk" title="${fmtN(r.forks_count)} forks">${I_FORK}${fmtN(r.forks_count)}</span>
+            <span class="sep">·</span>
+            <span title="${esc(fmtDate(r.pushed_at))}">atualizado ${relTime(r.pushed_at)}</span>
+            ${r.fork ? '<span class="badge">FORK</span>' : ''}
+            ${r.archived ? '<span class="badge arch">ARQUIVADO</span>' : ''}
+            <span class="go">${I_GO}</span>
+          </span>
+        </span>
+      </a>
+    </li>`;
+  }
+
+  function render(){
+    const q = norm(state.q);
+    let list = state.repos.filter(r => {
+      if (state.kind === 'fork' && !r.fork) return false;
+      if (state.kind === 'src'  &&  r.fork) return false;
+      if (state.lang === '__none__' ? r.language !== null : (state.lang && r.language !== state.lang)) return false;
+      if (q){
+        const hay = norm(r.name) + ' ' + norm(r.description || '') + ' ' + norm(r.language || '');
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    list.sort(CMP[state.sort]);
+
+    $('#list').innerHTML = list.map(entryHTML).join('');
+
+    const box = $('#emptyBox'), msg = $('#emptyMsg'), btn = $('#emptyClear');
+    if (!state.repos.length){
+      box.classList.remove('hidden'); btn.classList.add('hidden');
+      msg.textContent = 'Este perfil ainda não publicou repositórios — o índice está em branco.';
+    } else if (!list.length){
+      box.classList.remove('hidden'); btn.classList.remove('hidden');
+      msg.textContent = 'Nenhuma entrada do acervo corresponde aos filtros atuais.';
+    } else {
+      box.classList.add('hidden');
+    }
+
+    const n = list.length, total = state.repos.length;
+    $('#tocCount').textContent = isFiltered()
+      ? `ÍNDICE — ${n} DE ${total} ENTRADAS`
+      : `ÍNDICE — ${total} ${total===1?'ENTRADA':'ENTRADAS'}`;
+    $('#clearBtn').classList.toggle('hidden', !isFiltered());
+  }
+
+  function clearFilters(){
+    state.q = ''; state.kind = 'all'; state.lang = null;
+    $('#q').value = '';
+    document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.dataset.k === 'all'));
+    updateBandSel(); render();
+  }
+
+  /* ---------- estados de carregamento / erro ---------- */
+  function showError(e){
+    const page = $('#page');
+    page.classList.remove('is-loading'); page.classList.add('is-error');
+    const st = e.status || 0;
+    let code, title, text;
+    if (st === 403 || st === 429){
+      code = 'ERRO 403'; title = 'Cota da API esgotada.';
+      text = 'O GitHub permite 60 consultas por hora para quem navega sem autenticação — e a cota se esgotou para o seu endereço neste momento. Aguarde alguns minutos e consulte o acervo novamente.';
+    } else if (st === 404){
+      code = 'ERRO 404'; title = 'Acervo não encontrado.';
+      text = `Não encontrei o perfil “${USER}” no GitHub. Confira se o endereço está correto.`;
+    } else if (st === 0){
+      code = 'SEM CONEXÃO'; title = 'Falha ao alcançar o GitHub.';
+      text = 'Não consegui falar com api.github.com. Verifique sua conexão e tente de novo.';
+    } else {
+      code = 'ERRO ' + st; title = 'O GitHub respondeu com um erro.';
+      text = `A API devolveu o código ${st}. Pode ser uma instabilidade momentânea — tente novamente em instantes.`;
+    }
+    $('#state').innerHTML = `<div class="error">
+      <span class="err-code mono">${code}</span>
+      <h2>${title}</h2><p>${text}</p>
+      <button id="retry" class="mono">Consultar novamente</button>
+    </div>`;
+    $('#retry').addEventListener('click', init);
+  }
+
+  /* ---------- orquestração ---------- */
+  async function init(){
+    const page = $('#page');
+    page.classList.remove('is-error','is-ready'); page.classList.add('is-loading');
+    $('#state').innerHTML = `<div class="term">
+        <span class="cmd">$ compilando o sumário do acervo…<span class="blink">▌</span></span>
+        <span>→ GET api.github.com/users/${USER}</span>
+      </div>
+      <div class="skel"><span class="num">01</span><div class="sk-body"><div class="sk-row"><span class="sk-title"></span><span class="sk-dots"></span><span class="sk-star"></span></div><span class="sk-desc"></span><span class="sk-meta"></span></div></div>
+      <div class="skel"><span class="num">02</span><div class="sk-body"><div class="sk-row"><span class="sk-title" style="width:46%"></span><span class="sk-dots"></span><span class="sk-star"></span></div><span class="sk-desc" style="width:48%"></span><span class="sk-meta" style="width:30%"></span></div></div>
+      <div class="skel"><span class="num">03</span><div class="sk-body"><div class="sk-row"><span class="sk-title" style="width:27%"></span><span class="sk-dots"></span><span class="sk-star"></span></div><span class="sk-desc" style="width:60%"></span><span class="sk-meta" style="width:42%"></span></div></div>`;
+    try{
+      const profile = await getProfile();
+      const repos = await getRepos();
+      state.repos = repos;
+      buildProfile(profile, repos);
+      buildBand(repos);
+      render();
+      page.classList.remove('is-loading'); page.classList.add('is-ready');
+    }catch(e){ showError(e); }
+  }
+
+  /* ---------- eventos ---------- */
+  $('#q').addEventListener('input', e => { state.q = e.target.value.trim(); render(); });
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    state.kind = b.dataset.k;
+    document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b));
+    render();
+  }));
+  $('#sort').addEventListener('change', e => { state.sort = e.target.value; render(); });
+  $('#clearBtn').addEventListener('click', clearFilters);
+  $('#emptyClear').addEventListener('click', clearFilters);
+  document.addEventListener('keydown', e => {
+    const t = document.activeElement && document.activeElement.tagName;
+    if (e.key === '/' && t !== 'INPUT' && t !== 'SELECT' && t !== 'TEXTAREA'){
+      e.preventDefault(); $('#q').focus();
+    }
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
